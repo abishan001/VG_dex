@@ -1,0 +1,15 @@
+[
+    {
+        "symbol": "EST",
+        "name": "ESToken",
+        "address": "0xfaf135A183E55f266132e47E6d731A3E7E720f11",
+        "decimals": 18
+    },
+    {
+        "symbol": "VGT",
+        "name": "VGToken",
+        "address": "0x770a26cD7FFB8D267D55d90fC0d8dFa3F987f39E",
+        "decimals": 18
+    }
+]
+
