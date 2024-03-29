@@ -200,7 +200,7 @@ code {
     align-items: flex-start;
     padding-left: 30px;
     padding-right: 30px;
-    margin: 50px auto;
+    margin: 15px auto;
   }
   
   .tradeBoxHeader {
@@ -384,3 +384,124 @@ code {
     font-weight: 300;
     color: #51596f;
   }
+
+  .progress{
+    height: 75px;
+    width: 75px;
+    margin: auto;
+  }
+
+  .tokenContainer{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .tokenHeader{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    padding: 10px 20px;
+  }
+
+  .tokenBox{
+    margin: auto;
+    width:90%;
+    background-color: white;
+    height: 300px;
+    border-radius: 10px;
+  }
+
+  .tableContainer{
+    display: flex;
+    flex-direction: row;
+    margin: 10px;
+    justify-content: space-evenly;
+  }
+  
+  .buyContainer{
+    display: flex;
+    flex-direction: column;
+  }
+
+  .buyInput{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .dropdown{
+    width: 250px;
+    user-select: none;
+    position: relative;
+  }
+
+  .dropdown .dropdown-btn{
+    padding: 15px 10px;
+    background: #fff;
+    box-shadow: 3px 3px 10px 6px rgba(0,0,0,0.06);
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px;
+  }
+
+  .dropdown .dropdown-content{
+    position:absolute;
+    top: 110%;
+    padding: 5px;
+    background: #fff;
+    box-shadow: 3px 3px 10px 6px rgba(0,0,0,0.06);
+    font-weight: 500;
+    color: #333;
+    width: 100%;
+    border-radius: 10px;
+  }
+
+  .dropdown .dropdown-content .dropdown-item{
+    padding: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dropdown .dropdown-content .dropdown-item:hover{
+    background: #f4f4f4;
+  }
+
+  .buyButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #243056; 
+    width: 300px;
+    height: 55px;
+    font-size: 20px;
+    border-radius: 12px;
+    color: #5981F3;
+    font-weight: bold;
+    transition: 0.3s;
+    margin: auto;
+    margin-top: 10px;
+  }
+
+  .tokenContainer{
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .tokenHeader-item{
+    padding: 5px;
+    color: black;
+  }
+
+  .aboutToken{
+    display: flex;
+    margin: 20px 5px;
+    border-radius: 5px;
+    gap:10px
+  }
+

@@ -15,77 +15,76 @@ interface WindowWithEthereum extends Window {
     ethereum?: any;
 }
 export default function Home() {
-  const [tokenOneAmount, setTokenOneAmount] = useState(0);
-  const [tokenTwoAmount, setTokenTwoAmount] = useState(0);
-  const [tokenOne, setTokenOne] = useState(tokenList[0]);
-  const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
-  // const [isConnected,setIsConnected] = useState(false);
-  const [isOpen, setIsOpen ] = useState(false);
-  const [changeToken, setChangeToken] = useState(1);
-  const {address,isConnected} = useContext(WalletContext);
+    const [tokenOneAmount, setTokenOneAmount] = useState(0);
+    const [tokenTwoAmount, setTokenTwoAmount] = useState(0);
+    const [tokenOne, setTokenOne] = useState(tokenList[0]);
+    const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
+    // const [isConnected,setIsConnected] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [changeToken, setChangeToken] = useState(1);
+    const { address, isConnected } = useContext(WalletContext);
 
-  const win = window as WindowWithEthereum;
+    const changeAmount = (event: any) => {
+        setTokenOneAmount(event.target.value);
+    }
 
+    function switchTokens() {
+        const one = tokenOne;
+        const two = tokenTwo;
+        setTokenOne(two);
+        setTokenTwo(one);
+    }
 
-  const changeAmount = (event : any) => {
-      setTokenOneAmount(event.target.value);
-  }
+    const handleSwap = async () => {
+        if (typeof window !== undefined) {
+            const win = window as WindowWithEthereum;
+            try {
+                const cryptoAmount: BigInt = BigInt(tokenOneAmount) * BigInt("1000000000000000000");
+                const cryptoInEther = cryptoAmount.toString();
 
-  function switchTokens(){
-      const one = tokenOne;
-      const two = tokenTwo;
-      setTokenOne(two);
-      setTokenTwo(one);
-  }
+                const provider = await new ethers.BrowserProvider(win.ethereum, "sepolia");
+                const signer = await provider.getSigner();
 
-  const handleSwap = async() =>{
-      try{
+                const ESToken = new Contract(tokenOne.address, ContractAbi, signer);
 
-      const cryptoAmount: BigInt = BigInt(tokenOneAmount) * BigInt("1000000000000000000");
-      const cryptoInEther = cryptoAmount.toString();
+                const approveToken = await ESToken.approve("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487", cryptoInEther);
+                await approveToken.wait();
 
-      const provider = await new ethers.BrowserProvider(win.ethereum, "sepolia");
-      const signer = await provider.getSigner();
+                const swapContract = new Contract("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487", SwapAbi, signer);
+                const swapToken = await swapContract.swap(tokenOne.address, tokenTwo.address, cryptoInEther);
+                await swapToken.wait();
+                toast.success("Token swapped successfully.")
+            } catch (err) {
+                toast.error("Something went wrong.")
+            } finally {
+                setTokenOneAmount(0);
+                setTokenTwoAmount(0);
+            }
+        }
+    }
 
-      const ESToken = new Contract(tokenOne.address,ContractAbi,signer);
-
-      const approveToken = await ESToken.approve("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",cryptoInEther);
-      await approveToken.wait();
-
-      const swapContract = new Contract("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",SwapAbi,signer);
-      const swapToken = await swapContract.swap(tokenOne.address,tokenTwo.address,cryptoInEther);
-      await swapToken.wait();
-      toast.success("Token swapped successfully.")
-      } catch(err){
-          toast.error("Something went wrong.")
-      }finally{
-          setTokenOneAmount(0);
-          setTokenTwoAmount(0);
-      }     
-  }
-
-  // useEffect(()=>{handleSwap()},[])
-  return (
-      <div className='tradeBox'>
-          <div className='tradeBoxHeader'>
-              <h4>Swap</h4>
-              <div className='inputs'>
-                  <Input placeholder='0' value={tokenOneAmount} onChange={changeAmount} />
-                  <Input placeholder='You get.' value={tokenOneAmount} disabled={true} />
-                  <div className='switchButton' onClick={switchTokens}>
-                      <ArrowDownOutlined className='switchArrow' />
-                  </div>
-                  <div className='assetOne' onClick={()=> {}}>
-                      {tokenOne.symbol}
-                      <DownOutlined />
-                  </div>
-                  <div className='assetTwo' onClick={()=> {}}>
-                      {tokenTwo.symbol}
-                      <DownOutlined />
-                  </div>
-              </div>
-              <button className='swapButton' disabled={!isConnected} onClick={handleSwap}>Swap</button>
-          </div>
-      </div>
-  )
+    // useEffect(()=>{handleSwap()},[])
+    return (
+        <div className='tradeBox'>
+            <div className='tradeBoxHeader'>
+                <h4>Swap</h4>
+                <div className='inputs'>
+                    <Input placeholder='0' value={tokenOneAmount} onChange={changeAmount} />
+                    <Input placeholder='You get.' value={tokenOneAmount} disabled={true} />
+                    <div className='switchButton' onClick={switchTokens}>
+                        <ArrowDownOutlined className='switchArrow' />
+                    </div>
+                    <div className='assetOne' onClick={() => { }}>
+                        {tokenOne.symbol}
+                        <DownOutlined />
+                    </div>
+                    <div className='assetTwo' onClick={() => { }}>
+                        {tokenTwo.symbol}
+                        <DownOutlined />
+                    </div>
+                </div>
+                <button className='swapButton' disabled={!isConnected} onClick={handleSwap}>Swap</button>
+            </div>
+        </div>
+    )
 }

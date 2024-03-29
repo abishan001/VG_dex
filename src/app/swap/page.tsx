@@ -9,8 +9,9 @@ import tokenList from "../../tokenlist.json"
 import { WalletContext } from '../context/wallet.context'
 import { Contract, ethers, formatEther, parseUnits } from "ethers";
 import { SwapAbi, ContractAbi } from '@/contract_abi'
-import { CircularProgressbar } from 'react-circular-progressbar'
-
+import { CircularProgressbar } from 'react-circular-progressbar';
+import { Circle } from 'rc-progress'
+import { ClipLoader, FadeLoader } from 'react-spinners'
 interface WindowWithEthereum extends Window {
     ethereum?: any;
 }
@@ -24,7 +25,8 @@ function Swap() {
     const [isOpen, setIsOpen ] = useState(false);
     const [changeToken, setChangeToken] = useState(1);
     const {address,isConnected} = useContext(WalletContext);
-
+    const [ showProgressBar, setShowProgressBar ] = useState(false);
+    const [ loading, setLoading ] = useState(true);
     const win = window as WindowWithEthereum;
 
 
@@ -40,33 +42,39 @@ function Swap() {
     }
 
     const handleSwap = async() =>{
+        setShowProgressBar(true);
         try{
-
-        const cryptoAmount: BigInt = BigInt(tokenOneAmount) * BigInt("1000000000000000000");
-        const cryptoInEther = cryptoAmount.toString();
-
-        const provider = await new ethers.BrowserProvider(win.ethereum, "sepolia");
-        const signer = await provider.getSigner();
-
-        const ESToken = new Contract(tokenOne.address,ContractAbi,signer);
-
-        const approveToken = await ESToken.approve("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",cryptoInEther);
-        await approveToken.wait();
-
-        const swapContract = new Contract("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",SwapAbi,signer);
-        const swapToken = await swapContract.swap(tokenOne.address,tokenTwo.address,cryptoInEther);
-        await swapToken.wait();
-        toast.success("Token swapped successfully.")
-        } catch(err){
-            toast.error("Something went wrong.")
-        }finally{
-            setTokenOneAmount(0);
-            setTokenTwoAmount(0);
-        }     
+            const cryptoAmount: BigInt = BigInt(tokenOneAmount) * BigInt("1000000000000000000");
+            const cryptoInEther = cryptoAmount.toString();
+    
+            const provider = await new ethers.BrowserProvider(win.ethereum, "sepolia");
+            const signer = await provider.getSigner();
+    
+            const ESToken = new Contract(tokenOne.address,ContractAbi,signer);
+    
+            const approveToken = await ESToken.approve("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",cryptoInEther);
+            await approveToken.wait();
+    
+            const swapContract = new Contract("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",SwapAbi,signer);
+            const swapToken = await swapContract.swap(tokenOne.address,tokenTwo.address,cryptoInEther);
+            await swapToken.wait();
+            toast.success("Token swapped successfully.")
+            } catch(err){
+                toast.error("Something went wrong.")
+            }finally{
+                setShowProgressBar(false);
+                setLoading(false);
+                setTokenOneAmount(0);
+                setTokenTwoAmount(0);
+            } 
     }
 
     // useEffect(()=>{handleSwap()},[])
     return (
+        <>
+        <div className='progress'>
+        { showProgressBar && <FadeLoader loading={loading} color='green'/> }
+        </div>
         <div className='tradeBox'>
             <div className='tradeBoxHeader'>
                 <h4>Swap</h4>
@@ -88,6 +96,7 @@ function Swap() {
                 <button className='swapButton' disabled={!isConnected} onClick={handleSwap}>Swap</button>
             </div>
         </div>
+        </>
     )
 }
 

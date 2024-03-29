@@ -12,10 +12,11 @@ interface WindowWithEthereum extends Window {
 }
 
 function Header() {
-    const win = window as WindowWithEthereum;
     const { address, setAddress, isConnected , setIsConnected } = useContext(WalletContext);
-
+    
     const connectMetaMask = async() => {
+        if (typeof window !== 'undefined') {
+        const win = window as WindowWithEthereum;
         // Check if MetaMask is installed
         if (typeof win.ethereum !== 'undefined') {
             try {
@@ -35,19 +36,20 @@ function Header() {
             toast.error("Metamask not installed.")
         }
     }
+    }
     return (
         <header>
             <div className='leftH'>
-                <Link href="./swap">
+                <Link href="/swap">
                 <div className='headerItem'>Swap</div>
                 </Link>
-                <Link href="./token">
+                <Link href="/token">
                 <div className='headerItem'>Tokens</div>
                 </Link>
-                <Link href="./send">
+                <Link href="/send">
                 <div className='headerItem'>Send</div>
                 </Link>
-                <Link href="./buy">
+                <Link href="/buy">
                 <div className='headerItem'>Buy</div>
                 </Link>
             </div>

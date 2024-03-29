@@ -5,6 +5,8 @@ import { ethers } from 'ethers';
 import toast from 'react-hot-toast';
 import { ContractAbi } from '@/contract_abi';
 import { Contract } from 'ethers';
+import TableBody from '../components/TableBody';
+import { BodyContent } from '@/types';
 
 interface WindowWithEthereum extends Window {
   ethereum?: any;
@@ -15,6 +17,22 @@ interface TokenResponse{
   message: string,
   result :any[],
 }
+
+const data: BodyContent[] = [
+  {
+    imgUrl : "./ethereum-wallet.png",
+    isTopic: true,
+    topic1: "Token",
+    topic2: "Balance"
+  },
+  {
+    imgUrl : "./ethereum-wallet.png",
+    isTopic: false,
+    topic1: "ESToken",
+    topic2: "5000"
+  },
+]
+
 
 function Token() {
   const win = window as WindowWithEthereum;
@@ -51,7 +69,15 @@ function Token() {
   }
   useEffect(()=>{getTokenList()},[])
   return (
-    <div>Token list</div>
+    <div className="tokenContainer">
+      <div className='tokenHeader'>
+        <img src='./ethereum-wallet.png' height={50} width={50}></img>
+        <h1 style={{marginLeft:"10px", fontWeight:'bold'}}>Wallet</h1>
+      </div>
+      <div>
+          {data.map((dat)=>(<TableBody topic1={dat.topic1} topic2={dat.topic2} isTopic={dat.isTopic} imgUrl={dat.imgUrl}/>))}
+      </div>
+    </div>
   )
 }
 
