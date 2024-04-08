@@ -2,17 +2,18 @@
 pragma solidity ^0.8.0;
 
 interface IERC20 {
-    function approve(address spender, uint amount) external returns (bool);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    function transfer(address recipient, uint256 amount) external returns (bool);
+    function approve(address spender, uint amount) external payable returns (bool);
+    function approve(address owner,address spender, uint amount) external payable returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external payable returns (bool);
+    function transfer(address recipient, uint256 amount) external payable returns (bool);
     function balanceOf(address account) external view returns (uint256);
 }
 
 contract Swap {
     uint8 public decimals = 18;
 
-    address public token1;
-    address public token2;
+    address public immutable token1;
+    address public immutable token2;
     uint256 public reserve1 = 0;
     uint256 public reserve2 = 0;
 
@@ -28,14 +29,20 @@ contract Swap {
         require((c = a+b) >= a, "Addition overflow");
     }
 
-    function addLiquidity(uint256 _amountToken1, uint256 _amountToken2) external {
+    function safeSub(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b <= a, "Subtraction underflow");
+        uint256 c = a - b;
+        return c;
+    }
+
+    function addLiquidity(uint256 _amountToken1, uint256 _amountToken2) external payable {
 
         require(_amountToken1 > 0 && _amountToken2 > 0,"Token amount should be greater than 0.");
         require(IERC20(token1).balanceOf(msg.sender) > _amountToken1,"You do not have sufficient tokens.");
         require(IERC20(token2).balanceOf(msg.sender) > _amountToken2,"You do not have sufficient tokens.");
 
-        require(IERC20(token1).approve(address(this),_amountToken1),"Allowance denied");
-        require(IERC20(token2).approve(address(this),_amountToken2),"Allowance denied");
+        require(IERC20(token1).approve(msg.sender,address(this),_amountToken1),"Allowance denied");
+        require(IERC20(token2).approve(msg.sender,address(this),_amountToken2),"Allowance denied");
 
         require(IERC20(token1).transferFrom(msg.sender,address(this),_amountToken1), "Transfer failed.");
         require(IERC20(token2).transferFrom(msg.sender,address(this),_amountToken2), "Transfer failed.");
@@ -46,24 +53,15 @@ contract Swap {
         emit LiquidityAdded(msg.sender, _amountToken1, _amountToken2);
     }
 
-    function getBalanceOfAddress() public view returns(uint256){
-        return IERC20(token1).balanceOf(msg.sender);
-    }
-
-    function getBalanceOf() public view returns(uint256){
-        address myAddress = address(this);
-        return IERC20(token1).balanceOf(myAddress);
-    }
-
     // Function to calculate the amount of one token that can be obtained for a given amount of the other token
-    function getAmountOut(uint256 _amountIn, uint256 _reserveIn, uint256 _reserveOut) internal view returns (uint256) {
+    function getAmountOut(uint256 _amountIn, uint256 _reserveIn, uint256 _reserveOut) internal pure returns (uint256) {
         require(_amountIn > 0, "Amount must be greater than zero");
         return (_amountIn * _reserveOut) / ( _reserveIn + _amountIn);
     }
 
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    function swap(address _inputToken, address _outputToken, uint256 _amountIn) external{
+    function swap(address _inputToken, address _outputToken, uint256 _amountIn) external payable {
         require( _amountIn > 0, "Amount should be greater than 0.");
         
         require(_inputToken == token1 || _inputToken == token2, "Invalid input token");
@@ -86,9 +84,10 @@ contract Swap {
         amountOut = getAmountOut(_amountIn, amountInReserve, amountOutReserve);
         require(IERC20(_outputToken).balanceOf(msg.sender) > amountOut, "You do not have insufficient balance.");
 
-        IERC20(_inputToken).approve(address(this),_amountIn);
+        IERC20(_inputToken).approve(msg.sender,address(this),_amountIn);
         IERC20(_inputToken).transferFrom(msg.sender, address(this), _amountIn);
-        IERC20(_outputToken).transfer(msg.sender, amountOut);
+        IERC20(_outputToken).transfer(address(this), amountOut);
+    
     // Update reserves
         if (_inputToken == token1) {
             reserve1 += _amountIn;
@@ -99,6 +98,10 @@ contract Swap {
         }
     }
 
+    function approveToken(address _token, uint256 _tm) external payable {
+        IERC20(_token).approve(address(this),_tm);
+    }
+
 
     function buyTokens(address _token, uint256 _numberOfTokens) external payable {
         require(_numberOfTokens > 0 , "Token number should be greater than 0.");
@@ -107,7 +110,16 @@ contract Swap {
         }else{
             require(reserve2 > _numberOfTokens, "Liqidity pool lacks token to buy.");
         }
+        IERC20(_token).approve(address(this),msg.sender,_numberOfTokens);
         IERC20(_token).transferFrom(address(this),msg.sender,_numberOfTokens);
+        
+        //Update reserves
+        if(_token == token1){
+            reserve1 -= _numberOfTokens;
+        }else{
+            reserve2 -= _numberOfTokens;
+        }
+
     }
 
     // function getExchangeRate(address _token1, address _token2, uint256 _tokenAmount) public view returns(uint256){

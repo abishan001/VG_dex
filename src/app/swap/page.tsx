@@ -2,36 +2,63 @@
 import React from 'react'
 import "@/app/styles/app.css"
 import { Input } from 'antd'
-import { ArrowDownOutlined, DownOutlined, SettingOutlined } from '@ant-design/icons'
-import { useState, useContext } from 'react'
+import { ArrowDownOutlined, DownOutlined } from '@ant-design/icons'
+import { useState, useContext, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import tokenList from "../../tokenlist.json"
+import {Tokens} from "../../tokenlist"
 import { WalletContext } from '../context/wallet.context'
-import { Contract, ethers, formatEther, parseUnits } from "ethers";
 import { SwapAbi, ContractAbi } from '@/contract_abi'
-import { CircularProgressbar } from 'react-circular-progressbar';
-import { Circle } from 'rc-progress'
-import { ClipLoader, FadeLoader } from 'react-spinners'
-interface WindowWithEthereum extends Window {
-    ethereum?: any;
-}
+import { FadeLoader } from 'react-spinners'
+import { useWriteContract } from 'wagmi'
+import { config } from '../layout'
+import { useReadContract } from 'wagmi';
+import { TokenContext } from '../context/token.context'
+import { waitForTransactionReceipt } from 'wagmi/actions'
 
 function Swap() {
-    const [tokenOneAmount, setTokenOneAmount] = useState(0);
+    // const [token, settoken] = useState(0);
+    const { token,setToken} = useContext(TokenContext);
     const [tokenTwoAmount, setTokenTwoAmount] = useState(0);
-    const [tokenOne, setTokenOne] = useState(tokenList[0]);
-    const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
+    const [tokenOne, setTokenOne] = useState(Tokens[0]);
+    const [tokenTwo, setTokenTwo] = useState(Tokens[1]);
     // const [isConnected,setIsConnected] = useState(false);
-    const [isOpen, setIsOpen ] = useState(false);
     const [changeToken, setChangeToken] = useState(1);
     const {address,isConnected} = useContext(WalletContext);
     const [ showProgressBar, setShowProgressBar ] = useState(false);
     const [ loading, setLoading ] = useState(true);
-    const win = window as WindowWithEthereum;
 
-
+    const {
+        data: swapHash,
+        error: swapError,
+        isPending: swapPending,
+        status: swapStatus,
+        writeContractAsync: swap,
+    } = useWriteContract();
+    
     const changeAmount = (event : any) => {
-        setTokenOneAmount(event.target.value);
+        setToken(event.target.value);
+    }
+
+    const ans = useReadContract({
+        config,
+        abi: ContractAbi,
+        address: '0xfaf135A183E55f266132e47E6d731A3E7E720f11',
+        functionName: 'totalSupply',
+      });
+    //   console.log("here",ans.isSuccess)
+
+    async function readSwapFunction(){
+        try{
+            const ans = useReadContract({
+                config,
+                abi: ContractAbi,
+                address: '0xfaf135A183E55f266132e47E6d731A3E7E720f11',
+                functionName: 'totalSupply',
+              });
+        }catch{
+            toast.error("Sth went wrong");
+        }
+
     }
 
     function switchTokens(){
@@ -42,34 +69,41 @@ function Swap() {
     }
 
     const handleSwap = async() =>{
-        setShowProgressBar(true);
         try{
-            const cryptoAmount: BigInt = BigInt(tokenOneAmount) * BigInt("1000000000000000000");
+            setShowProgressBar(true);
+            const cryptoAmount: BigInt = BigInt(token) * BigInt("1000000000000000000");
             const cryptoInEther = cryptoAmount.toString();
-    
-            const provider = await new ethers.BrowserProvider(win.ethereum, "sepolia");
-            const signer = await provider.getSigner();
-    
-            const ESToken = new Contract(tokenOne.address,ContractAbi,signer);
-    
-            const approveToken = await ESToken.approve("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",cryptoInEther);
-            await approveToken.wait();
-    
-            const swapContract = new Contract("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487",SwapAbi,signer);
-            const swapToken = await swapContract.swap(tokenOne.address,tokenTwo.address,cryptoInEther);
-            await swapToken.wait();
+            const swapResult = await swap({
+                address:"0xe6bc6233DE048882F44Ac60E6f634E2424a7eC1e",
+                abi: SwapAbi,
+                functionName: 'swap',
+                args:[Tokens[0].address,Tokens[1].address,cryptoInEther]
+              });
+          const swapTransactionReceipt = await waitForTransactionReceipt(
+            config,
+            {
+                hash: swapResult,
+            });
+
+            if(swapStatus)
             toast.success("Token swapped successfully.")
+
             } catch(err){
+                console.log('Errr',err)
                 toast.error("Something went wrong.")
             }finally{
                 setShowProgressBar(false);
                 setLoading(false);
-                setTokenOneAmount(0);
+                setToken(0);
                 setTokenTwoAmount(0);
             } 
     }
+    
+    // const [swap,setSwap] = useState<string>('');
+    // useEffect(():any=>{const result = useSwapContract(tokenOne.address,tokenTwo.address,"10")},[swap])
+    useEffect(()=>{setToken(token)},[token]);
 
-    // useEffect(()=>{handleSwap()},[])
+   
     return (
         <>
         <div className='progress'>
@@ -79,8 +113,8 @@ function Swap() {
             <div className='tradeBoxHeader'>
                 <h4>Swap</h4>
                 <div className='inputs'>
-                    <Input placeholder='0' value={tokenOneAmount} onChange={changeAmount} />
-                    <Input placeholder='You get.' value={tokenOneAmount} disabled={true} />
+                    <Input placeholder='0' value={token} onChange={changeAmount} />
+                    <Input placeholder='You get.' value={token} disabled={true} />
                     <div className='switchButton' onClick={switchTokens}>
                         <ArrowDownOutlined className='switchArrow' />
                     </div>
@@ -99,5 +133,6 @@ function Swap() {
         </>
     )
 }
+
 
 export default Swap

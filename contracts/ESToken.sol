@@ -24,7 +24,7 @@ contract TokenContract {
         balanceOf[msg.sender] = totalSupply;
     }
 
-    function safeAdd(uint256 a, uint256 b) public pure returns (uint256 c) {
+    function safeAdd(uint256 a, uint256 b) internal  pure returns (uint256 c) {
         require((c = a+b) >= a, "Addition overflow");
     }
 
@@ -34,7 +34,7 @@ contract TokenContract {
         return c;
     }
 
-    function transfer(address _to, uint256 _value) public returns (bool success) {
+    function transfer(address _to, uint256 _value) public payable returns (bool success) {
         require(balanceOf[msg.sender] >= _value, "Not enough balance");
         balanceOf[msg.sender] = safeSub(balanceOf[msg.sender], _value);
         balanceOf[_to] = safeAdd(balanceOf[_to],_value);
@@ -42,13 +42,19 @@ contract TokenContract {
         return true;
     }
 
-    function approve(address _spender, uint256 _value) public returns (bool success) {
+    function approve(address _spender, uint256 _value) public payable returns (bool success) {
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+    function approve(address _owner,address _spender, uint256 _value) public payable returns (bool success) {
+        allowance[_owner][_spender] = _value;
+        emit Approval(_owner, _spender, _value);
+        return true;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public payable returns (bool success) {
         require(_value <= allowance[_from][_to], "Allowance exceeded");
         require(_value <= balanceOf[_from], "Not enough balance");
         balanceOf[_from] = safeSub(balanceOf[_from] , _value);

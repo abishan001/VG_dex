@@ -4,39 +4,27 @@ import "@/app/styles/app.css"
 import Link from 'next/link'
 import { useContext } from 'react'
 import { WalletContext } from '../context/wallet.context'
-import Web3 from 'web3'
 import toast from 'react-hot-toast'
-
-interface WindowWithEthereum extends Window {
-    ethereum?: any;
-}
+import { Connector, useConnect } from 'wagmi'
 
 function Header() {
     const { address, setAddress, isConnected , setIsConnected } = useContext(WalletContext);
-    
+    const { connectors } = useConnect();
+
     const connectMetaMask = async() => {
-        if (typeof window !== 'undefined') {
-        const win = window as WindowWithEthereum;
-        // Check if MetaMask is installed
-        if (typeof win.ethereum !== 'undefined') {
-            try {
-                // Request account access
-                await win.ethereum.request({ method: 'eth_requestAccounts' });
-                // Initialize Web3 with MetaMask's provider
-                const web3 = new Web3(win.ethereum);
-                // Use Web3 to interact with Ethereum
-                const accounts = await web3.eth.getAccounts();
-                setAddress(accounts[0]);
-                setIsConnected(true);
-                toast.success("Wallet connected successfully.")
-            } catch (error) {
-                toast.error("User denied account access")
-            }
-        } else {
-            toast.error("Metamask not installed.")
-        }
-    }
-    }
+                await connectors[0].connect()
+                .then(
+                    ()=>{
+                        setIsConnected(true);
+                        toast.success("Wallet connected successfully.")
+                    })
+                .catch(()=>{
+                    toast.error("Something went wrong while connecting wallet.")
+                })
+                 const walletAddress = (await connectors[0].getAccounts()).at(0) || "Connect";
+                 setAddress(walletAddress);
+        } 
+
     return (
         <header>
             <div className='leftH'>
@@ -58,7 +46,7 @@ function Header() {
                     <img src="/ethereum.png" width={20} alt="blockchain" className='logo'/>
                     Ethereum
                 </div>
-                <div className='connectButton' onClick= {isConnected ? ()=>{toast.error("Alread connected.")} : connectMetaMask }>
+                <div className='connectButton' onClick= {isConnected ? ()=>{toast.error("Already connected.")} : connectMetaMask }>
                     {isConnected ? (address.slice(0,4) +"..." +address.slice(38)) : "Connect"}
                 </div>
             </div>

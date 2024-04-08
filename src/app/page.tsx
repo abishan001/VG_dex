@@ -5,7 +5,7 @@ import { Input } from 'antd'
 import { ArrowDownOutlined, DownOutlined, SettingOutlined } from '@ant-design/icons'
 import { useState, useContext } from 'react'
 import toast from 'react-hot-toast'
-import tokenList from "../tokenlist.json"
+import {Tokens,SwapToken} from "../tokenlist"
 import { WalletContext } from './context/wallet.context'
 import { Contract, ethers, formatEther, parseUnits } from "ethers";
 import { SwapAbi, ContractAbi } from '@/contract_abi'
@@ -17,8 +17,8 @@ interface WindowWithEthereum extends Window {
 export default function Home() {
     const [tokenOneAmount, setTokenOneAmount] = useState(0);
     const [tokenTwoAmount, setTokenTwoAmount] = useState(0);
-    const [tokenOne, setTokenOne] = useState(tokenList[0]);
-    const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
+    const [tokenOne, setTokenOne] = useState(Tokens[0]);
+    const [tokenTwo, setTokenTwo] = useState(Tokens[1]);
     // const [isConnected,setIsConnected] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [changeToken, setChangeToken] = useState(1);
@@ -50,11 +50,12 @@ export default function Home() {
                 const approveToken = await ESToken.approve("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487", cryptoInEther);
                 await approveToken.wait();
 
-                const swapContract = new Contract("0x9d5909140DaBC214c71be9185dbE6f8AbeD97487", SwapAbi, signer);
+                const swapContract = new Contract("0xe6bc6233DE048882F44Ac60E6f634E2424a7eC1e", SwapAbi, signer);
                 const swapToken = await swapContract.swap(tokenOne.address, tokenTwo.address, cryptoInEther);
                 await swapToken.wait();
                 toast.success("Token swapped successfully.")
             } catch (err) {
+                console.log("err",err)
                 toast.error("Something went wrong.")
             } finally {
                 setTokenOneAmount(0);
