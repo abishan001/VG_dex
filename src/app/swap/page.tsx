@@ -28,10 +28,6 @@ function Swap() {
     const [ loading, setLoading ] = useState(true);
 
     const {
-        data: swapHash,
-        error: swapError,
-        isPending: swapPending,
-        status: swapStatus,
         writeContractAsync: swap,
     } = useWriteContract();
     
@@ -85,7 +81,7 @@ function Swap() {
                 hash: swapResult,
             });
 
-            if(swapStatus)
+            if(swapTransactionReceipt.status == 'success')
             toast.success("Token swapped successfully.")
 
             } catch(err){

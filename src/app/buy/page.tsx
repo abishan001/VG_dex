@@ -8,6 +8,7 @@ import { SwapAbi } from '@/contract_abi';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { config } from '../layout';
 import { FadeLoader } from 'react-spinners';
+import { message } from 'antd';
 
 function Buy() {
   const [isActive, setIsActive] = useState(false);
@@ -18,10 +19,6 @@ function Buy() {
   const [tokenAddress,setTokenAddress ] = useState("");
 
   const {
-    data: swapHash,
-    error: swapError,
-    isPending: swapPending,
-    status: swapStatus,
     writeContractAsync: buy,
 } = useWriteContract();
 
@@ -46,12 +43,12 @@ const handleBuy = async() =>{
           hash: swapResult,
       });
 
-      if(swapStatus)
+      if(swapTransactionReceipt.status == 'success')
       toast.success("Token bought successfully.")
 
       } catch(err){
           console.log('Errr',err)
-          toast.error("Something went wrong.")
+          toast.error(`${err}`)
       }finally{
           setShowProgressBar(false);
           setLoading(false);

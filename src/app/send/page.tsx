@@ -20,13 +20,8 @@ function Send() {
   const [showProgressBar,setShowProgressBar] = useState(false);
   const [loading,setLoading]= useState(false);
   const { address } = useContext(WalletContext);
-  console.log("heefre",address)
 
   const {
-    data: swapHash,
-    error: swapError,
-    isPending: swapPending,
-    status: swapStatus,
     writeContractAsync: readContract,
 } = useWriteContract();
 
@@ -56,7 +51,7 @@ function Send() {
             hash: swapResult,
         });
   
-        if(swapStatus)
+        if(swapTransactionReceipt.status == 'success')
         toast.success("Token sent successfully.")
   
         } catch(err){
